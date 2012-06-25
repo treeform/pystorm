@@ -1,0 +1,13 @@
+original(
+
+abc
+
+
+)
+strip(abc)
+original(	 abc
+	 
+)
+strip(abc)
+original( abc )
+strip(abc)

@@ -1,0 +1,3 @@
+3rd level module __name__:modules.submodules.module_name
+2nd level module __name__:modules.module_name
+1st level module __name__:__main__

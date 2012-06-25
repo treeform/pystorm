@@ -1,0 +1,4 @@
+not x > y - correct
+y >= y2 - correct
+z > x - correct
+not y >= x - correct

@@ -1,0 +1,4 @@
+import_modulea.modulea_fn()
+import_moduleb.moduleb_fn()
+imported.modulec.foo()
+imported.modules.submodules.modulea.foo()

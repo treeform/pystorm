@@ -1,0 +1,4 @@
+import_modulea.modulea_fn()
+import_moduleb.moduleb_fn()
+modulea_class:1
+moduleb_class:2

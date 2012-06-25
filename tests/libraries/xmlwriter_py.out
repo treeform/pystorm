@@ -1,0 +1,5 @@
+<foo>
+  <r1 spam="eggs">
+    <r2 eggs="spam">This is some text</r2>
+  </r1>
+</foo>

@@ -1,0 +1,8 @@
+F AND F=F
+F AND T=F
+T AND F=F
+T AND T=T
+T AND ?=?
+F AND ?=F
+? AND T=?
+? AND F=?
