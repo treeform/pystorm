@@ -971,17 +971,23 @@ class JavascriptBackend(object):
             self.nl()
 
             for idx, handler in enumerate(trydef.handlers):
+                if handler.name:
+                    self.add("var "+handler.name.id+"="+catchvar+";")
+                
+            for idx, handler in enumerate(trydef.handlers):
                 self += 1
                 self.nl()
 
                 if handler.name:
-                    print handler.name.id
-                    print handler.type.id
-                    self.add(handler.name.id+"="+catchvar+";")
-                    self.nl()
+                    if idx != 0:
+                        self.add("else ")
                     self.add("if("+handler.name.id+" instanceof "+handler.type.id+")")
+                    self.nl()
                 else:
-                    self.add("if(true)")
+                    if idx != 0:
+                        self.add("else ")
+                    else:
+                        self.add("if(true)")
 
                 #if handler.name:
                 #    catchvar = handler.name.id
