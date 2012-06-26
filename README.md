@@ -8,3 +8,15 @@ Python to javascript landsape is graveyard unfinished compilers. Why not take a 
 # Running
 
 python pystorm.py file.py > file.js
+
+# Hacking
+
+Files:
+    * *pystrom.py* - main 
+    * *pyfrontend.py* - this file reads the python's ast and transforms it a little bit into parsetree's classes.
+    * *jsbackend.py* - this is the backend part, takes the transformd parsetree ast classes and produces javascript.    
+    * *jslib.py* and *jsmap.py* - provides helper functions that gets compiled with the python.
+    * *parsetree.py* - contains the datastructure for the intermediate ast.
+    
+
+    
