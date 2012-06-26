@@ -91,7 +91,7 @@ class JavascriptBackend(object):
 
     def setNamespace(self,namespace):
         self.namespace = namespace
-        
+
     def pushScope(self,scope):
         return self.scope.append(scope)
 
@@ -111,7 +111,7 @@ class JavascriptBackend(object):
 
     def getInnerScope(self):
         return self.scope[len(self.scope)-1]
-        
+
     def isGlobal(self,name):
         if name == "__name__":
             return False
@@ -120,7 +120,7 @@ class JavascriptBackend(object):
     def addGlobal(self,name):
         self.getInnerScope().addGlobal(name)
 
-    # Expression handling 
+    # Expression handling
     # these functions return text with the javascript representation of the expression
 
     def AttributeLookup(self,adef,**kwargs):
@@ -134,7 +134,7 @@ class JavascriptBackend(object):
         txt += adef.attr
         return txt
 
- 
+
     def attributeLookupPath(self,obj):
         if isinstance(obj,VarName):
             return obj.varname
@@ -145,7 +145,7 @@ class JavascriptBackend(object):
             return None
         return None
 
-    def BinaryOp(self,bop,**kwargs):        
+    def BinaryOp(self,bop,**kwargs):
         op = bop.op
         if op in binaryOps:
             op = binaryOps[op]
@@ -162,7 +162,7 @@ class JavascriptBackend(object):
         txt = ''
         if not 'toplevel' in kwargs:
             txt += "("
-        lhtxt = self.generate(bop.left)        
+        lhtxt = self.generate(bop.left)
         rhtxt = self.generate(bop.right)
         txt += self.expand(op,[lhtxt,rhtxt])
         if not 'toplevel' in kwargs:
@@ -180,7 +180,7 @@ class JavascriptBackend(object):
             vtxt = self.generate(value)
             txt += ktxt + ":" + vtxt
         txt += '}'
-        return txt       
+        return txt
 
     def FunctionCall(self,fcalldef,**extraargs):
 
@@ -194,7 +194,7 @@ class JavascriptBackend(object):
         args = fcalldef.args
         # create a qualified version of the function name (add a suffix specifying the number of arguments)
         # to use in template lookup
-        qfname = fname + "." + str(len(args))     
+        qfname = fname + "." + str(len(args))
         kwargs = fcalldef.kwargs
         keyvalues = []
         dvtxt = None
@@ -207,14 +207,14 @@ class JavascriptBackend(object):
         # search for a function mapping, starting with the qualified version
         template = fname
 
-        
-        
+
+
         if methodcall:
             qfname = "." + qfname
-            fname = "." + fname 
- 
-        for name in [qfname,fname]:       
- 
+            fname = "." + fname
+
+        for name in [qfname,fname]:
+
             if name in mappedFuncs:
 
                 dependencies = []
@@ -224,20 +224,20 @@ class JavascriptBackend(object):
                 if isinstance(template,tuple):
                     dependencies = template[1]
                     template = template[0]
-                
+
                 for libfunc in dependencies:
                     self.addJslibSupport(libfunc)
 
                 if template == None:
                     raise BackendNotImplementedException("Function/Method:" + name)
                 else:
-                    break            
+                    break
 
         argtxt = []
         for arg in args:
             argtxt.append(self.generate(arg))
         if dvtxt:
-            argtxt.append(dvtxt)        
+            argtxt.append(dvtxt)
         txt = self.expand(template,argtxt,**extraargs)
         return txt
 
@@ -256,10 +256,10 @@ class JavascriptBackend(object):
         tmpname = self.genTmpVarName("comp")
         self.add("var "+tmpname + "= [];")
         self.nl()
-        e = ExpressionStatement(MethodCall(VarName(tmpname),"append",[compv.expr],{}))     
+        e = ExpressionStatement(MethodCall(VarName(tmpname),"append",[compv.expr],{}))
         block = Block([e])
         generators = compv.generators
-        generators.reverse()        
+        generators.reverse()
         for generator in generators:
             if generator.cond:
                 i  = IfStatement([(generator.cond,block)],None)
@@ -272,7 +272,7 @@ class JavascriptBackend(object):
                 else:
                     step = Literal(1)
                 f = ForStatement(generator.target,start,end,step,block)
-                block = Block([f])            
+                block = Block([f])
             else:
                 f = ForInStatement(generator.target,generator.itr,block)
                 block = Block([f])
@@ -287,9 +287,9 @@ class JavascriptBackend(object):
                 txt += ','
             txt += self.generate(listv.elements[idx])
         txt += ']'
-        return txt  
+        return txt
 
-    def Literal(self,lit,**kwargs):   
+    def Literal(self,lit,**kwargs):
         if isinstance(lit.value,bool):
             if lit.value == True:
                 return 'true'
@@ -297,7 +297,7 @@ class JavascriptBackend(object):
                 return 'false'
         elif lit.value == None:
             return 'null'
-        else:     
+        else:
             return repr(lit.value)
 
     def MethodCall(self,mcalldef,**kwargs):
@@ -307,7 +307,7 @@ class JavascriptBackend(object):
             path = path + "." + mcalldef.fname
             if path in class_aliases:
                 target = class_aliases[path]
-            
+
         if target == '':
             target = self.generate(mcalldef.target)
         txt = self.FunctionCall(mcalldef,targettxt=target)
@@ -351,7 +351,7 @@ class JavascriptBackend(object):
         txt += self.generate(uop.arg)
         if not 'toplevel' in kwargs:
             txt += ")"
-        return txt        
+        return txt
 
     def VarName(self,vdef,**kwargs):
         name = vdef.varname
@@ -363,7 +363,7 @@ class JavascriptBackend(object):
         return name
 
     # Statement handling
-    # these methods do not return values but update the output program using the methods 
+    # these methods do not return values but update the output program using the methods
 
     def AssignmentStatement(self,adef,**kwargs):
         if isinstance(adef.target, SliceOp):
@@ -376,13 +376,13 @@ class JavascriptBackend(object):
         target = adef.target
         if not isinstance(target,AttributeLookup):
             self.declare(adef.target)
-        varname = self.generate(target)                        
-        exprtxt = self.generate(adef.expr,toplevel=True) 
+        varname = self.generate(target)
+        exprtxt = self.generate(adef.expr,toplevel=True)
         self.add(varname)
         self.add('=')
         self.add(exprtxt)
         self.add(';')
-       
+
     def AssignmentSliceStatement(self,adef,**kwargs):
         lwb = adef.target.lwb
         upb = adef.target.upb
@@ -394,7 +394,7 @@ class JavascriptBackend(object):
         varname_s = self.genTmpVarName("slice")
         varname_l = self.genTmpVarName("loop")
         varname_c = self.genTmpVarName("counter")
-          
+
         if lwb:
             if isinstance(lwb,VarName) or isinstance(lwb,Literal):
                 lwbtxt = self.generate(lwb)
@@ -405,11 +405,11 @@ class JavascriptBackend(object):
             lwbtxt = "0"
 
         varname_u = self.genTmpVarName("upb")
-        if upb:        
+        if upb:
             self.add("var "+varname_u+"="+self.generate(upb,toplevel=True)+";").nl()
         else:
             self.add("var "+varname_u+"="+targettxt+".length;").nl()
-        
+
         if step:
             if isinstance(step,VarName) or isinstance(step,Literal):
                 steptxt = self.generate(step)
@@ -418,14 +418,14 @@ class JavascriptBackend(object):
                 self.add("var "+steptxt+"="+self.generate(step,toplevel=True)+";").nl()
         else:
             steptxt = "1"
-        
+
         self.add("var "+varname_s+"="+exprtxt+";").nl();
         self.add("var "+varname_l+";").nl()
         self.add("var "+varname_c+"=0;").nl()
-        
-        self.add("for("+varname_l+"="+lwbtxt+";"+varname_l+"<"+varname_u+";"+varname_l+"+="+steptxt+" ) {")        
+
+        self.add("for("+varname_l+"="+lwbtxt+";"+varname_l+"<"+varname_u+";"+varname_l+"+="+steptxt+" ) {")
         self += 1
-        
+
         self.nl().add("if ( "+varname_c+" < "+varname_s+".length) {")
         self += 1
         self.nl()
@@ -453,7 +453,7 @@ class JavascriptBackend(object):
         target = adef.target
         if not isinstance(target,AttributeLookup):
             self.declare(adef.target)
-        vtxt = self.generate(target)     
+        vtxt = self.generate(target)
         etxt = self.generate(adef.expr,toplevel=True)
         op = adef.op
         if op in assignOps:
@@ -469,28 +469,21 @@ class JavascriptBackend(object):
             self.addJslibSupport(dependency)
         txt = self.expand(op,[vtxt,etxt])
         self.add(txt+";")
-    
+
     def MultiAssignmentStatement(self, adef, **kargs):
         class_variable = False
         target = adef.target
         if not isinstance(target,AttributeLookup):
             self.declare(adef.target)
-        varname = self.generate(target)                        
+        varname = self.generate(target)
         exprtxt = self.generate(adef.expr,toplevel=True)
-        tmpv = self.genTmpVarName("assigment") 
+        tmpv = self.genTmpVarName("assigment")
         self.add(tmpv)
         self.add('=')
         self.add(exprtxt)
         self.add(';\n')
-        for i, var in enumerate(adef.target.elements):
-            
-            self.add(var.varname)
-            self.add('=')
-            self.add(tmpv)
-            self.add("[")
-            self.add(str(i))
-            self.add("]")
-            self.add(';\n')
+
+        self.add(self.distructure(adef.target, tmpv))
 
     def Block(self,block,**kwargs):
         if not 'toplevel' in kwargs:
@@ -500,7 +493,7 @@ class JavascriptBackend(object):
                 self.add(e)
                 self.nl()
         for a in xrange(0,len(block.statements)):
-            statement = block.statements[a]                        
+            statement = block.statements[a]
             self.generate(statement)
             if a != len(block.statements)-1:
                 self.nl()
@@ -557,11 +550,11 @@ class JavascriptBackend(object):
             if isstatic:
                 startarg=0
             for idx in xrange(startarg,len(memberfn.argnames)):
-                if idx > 1: 
+                if idx > 1:
                     argtxt += ","
                 argtxt += memberfn.argnames[idx]
             factxt += argtxt
-            factxt += ") { return " + self.applyNamespace(fname,namespace=namespace) 
+            factxt += ") { return " + self.applyNamespace(fname,namespace=namespace)
             if isstatic:
                 factxt += "("+argtxt+")"
             else:
@@ -569,21 +562,21 @@ class JavascriptBackend(object):
                     argtxt = ","+argtxt
                 factxt += "("+instname+argtxt+")"
             factxt += "; }"
-            return [factxt]            
+            return [factxt]
 
     def ClassDefinitionStatement(self,cdef,**kwargs):
 
         self.pushScope(cdef)
-        
+
         original_namespace = self.getNamespace()
-        
+
         namespace = cdef.getClassNamespace()
 
         if cdef.parent_class:
             parent_namespace = cdef.parent_class.getClassNamespace()
         else:
             parent_namespace = original_namespace
-        
+
         # generate the namespace apart from the inner most one (which
         # will be created by the factory function of this class)
 
@@ -592,7 +585,7 @@ class JavascriptBackend(object):
         self.nl()
 
         self.setNamespace(parent_namespace)
-        
+
         # generate the factory function, a function with the same name as the class, that
         # will construct a new class instance
         decorators = []
@@ -604,7 +597,7 @@ class JavascriptBackend(object):
             ctrargs = cdef.constructor.argnames[1:]
             ctrvararg = cdef.constructor.vararg
             ctrkwarg = cdef.constructor.kwarg
-       
+
         facbody = []
         facbody.append(Verbatim("if (arguments.length==1 && arguments[0] == undefined) { return; }"))
         facbody.append(Verbatim("var self = new "+self.applyNamespace(cdef.cname)+"(undefined);"))
@@ -614,7 +607,7 @@ class JavascriptBackend(object):
         # hook up member functions as properties of the class instance
         fns = cdef.memberfns()
         for fname in fns:
-            (ns,memberfn) = fns[fname]            
+            (ns,memberfn) = fns[fname]
             stubs = self.ClassDefinitionStatementStub(memberfn,ns,fname)
             for stub in stubs:
                 facbody.append(Verbatim(stub))
@@ -627,27 +620,27 @@ class JavascriptBackend(object):
             facbody.append(Verbatim(txt))
 
         # if the class has a constructor, need to call it towards the end of the factory function
-        if cdef.constructor:              
+        if cdef.constructor:
             if cdef.constructor.kwarg != None or cdef.constructor.vararg != None:
                 btxts = self.ClassDefinitionStatementStubGenericBody(cdef.constructor,
                                                             cdef.cname,cdef.constructor.fname,instname='self',constructor=True)
                 for btxt in btxts:
-                    facbody.append(Verbatim(btxt))    
+                    facbody.append(Verbatim(btxt))
             else:
                 ctrcall = ""
                 ctrcall += self.applyNamespace(cdef.constructor.fname)
                 ctrcall += "(self"
                 argtxt = ""
                 for idx in xrange(1,len(cdef.constructor.argnames)):
-                    if idx > 1: 
+                    if idx > 1:
                         argtxt += ","
                     argtxt += cdef.constructor.argnames[idx]
                 if argtxt != "":
                     argtxt = ","+argtxt
                 ctrcall += argtxt + ");"
                 facbody.append(Verbatim(ctrcall))
-        
-        facbody.append(Verbatim("return self;"))            
+
+        facbody.append(Verbatim("return self;"))
         self.nl()
         # factory function defined
 
@@ -655,7 +648,7 @@ class JavascriptBackend(object):
 
         # now create a dummy FunctionDefinitionStatement to generate the factory function
         facfn = FunctionDefinitionStatement(cdef.cname)
-        
+
         facfn.configure(decorators,
                     ctrargs,
                     [],
@@ -664,7 +657,7 @@ class JavascriptBackend(object):
                     Block(facbody))
         self.generate(facfn)
         self.nl()
-        self.nl()        
+        self.nl()
 
         self.setNamespace(namespace)
 
@@ -677,7 +670,7 @@ class JavascriptBackend(object):
         # generate definitions for all other member and static class functions
         for fname in fns:
             (classname,memberfn) = fns[fname]
-            
+
             if classname==cdef.getClassNamespace():
                 # only generate functions which are defined on this class (not inherited ones)
                 self.generate(memberfn)
@@ -698,11 +691,11 @@ class JavascriptBackend(object):
             a = AssignmentStatement(target,expr)
             self.generate(a)
             self.nl()
-        
+
         self.ClassSuperMethod(cdef,**kwargs)
 
         self.setNamespace(original_namespace)
-            
+
         self.popScope()
 
 
@@ -715,10 +708,10 @@ class JavascriptBackend(object):
         self.nl();
         self.add("this.self = self;");
         self.nl();
-        
+
         fns = cdef.memberfns(True)
         for fname in fns:
-            (ns,memberfn) = fns[fname]            
+            (ns,memberfn) = fns[fname]
             stubs = self.ClassDefinitionStatementStub(memberfn,ns,fname,objname='this',instname='this.self')
             for stub in stubs:
                 self.add(stub)
@@ -728,7 +721,7 @@ class JavascriptBackend(object):
         self.nl()
         self.add("}")
         self.nl()
-        
+
 
     def ContinueStatement(self,continuedef,**kwargs):
         self.add('continue;')
@@ -758,8 +751,8 @@ class JavascriptBackend(object):
             self -= 1
             self.nl().add("}")
         else:
-            targettxt = self.generate(ddef.target,toplevel=True)       
-            self.add("delete " + targettxt);        
+            targettxt = self.generate(ddef.target,toplevel=True)
+            self.add("delete " + targettxt);
 
     def EmptyStatement(self,edef,**kwargs):
         # add a comment to make the resulting javascript a little more readable
@@ -768,32 +761,32 @@ class JavascriptBackend(object):
     def ExceptionHandlerStatement(self,hdef,**kwargs):
         e = []
         catchvar = self.getCatchVar()
-        index = kwargs['handler_index']  
-        if hdef.ename:      
+        index = kwargs['handler_index']
+        if hdef.ename:
             if hdef.etype:
                 if index == 0:
                     self.add("if ")
                 else:
                     self.add(" else if ")
                 self.add("(" + catchvar + " instanceof " + hdef.etype + ")")
-        
+
             if hdef.ename != catchvar:
                 e.append("var "+hdef.ename+"="+catchvar+";")
         else:
             if index > 0:
                 self.add(" else ")
-        self.generate(hdef.ebody,extras=e)    
+        self.generate(hdef.ebody,extras=e)
 
     def ExpressionStatement(self,edef,**kwargs):
         self.add(self.generate(edef.expr,toplevel=True))
-        self.add(';')        
+        self.add(';')
 
     def ForStatement(self,fordef,**kwargs):
         self.declare(fordef.varname)
-        lwbtxt = self.generate(fordef.lwb) 
-        upbtxt = self.generate(fordef.upb) 
+        lwbtxt = self.generate(fordef.lwb)
+        upbtxt = self.generate(fordef.upb)
         steptxt = self.generate(fordef.step)
-        varname = self.generate(fordef.varname)  
+        varname = self.generate(fordef.varname)
         self.add('for(')
         self.add(varname+'='+lwbtxt+';')
         self.add(varname+'<'+upbtxt+';')
@@ -809,32 +802,34 @@ class JavascriptBackend(object):
         self.nl();
         tmpv = self.genTmpVarName("generator")
         self.add('var '+tmpv+' = new Generator('+tmp+');')
-        self.nl()   
+        self.nl()
         e = []
-
         if isinstance(fordef.target,ListValue):
             varname = self.genTmpVarName("loop")
-            txt = self.generate(fordef.target)
-            txt += "="
-            txt += varname
-            txt += ";"
-            e.append(txt)
+            if isinstance(fordef.target, ListValue):
+                e.append(self.distructure(fordef.target, varname))
+            else:
+                txt = self.generate(fordef.target)
+                txt += "="
+                txt += varname
+                txt += ";"
+                e.append(txt)
         else:
             varname = self.generate(fordef.target)
-        
-        self.add('for(')                    
+
+        self.add('for(')
         self.add(varname+'='+tmpv+'.nextValue();'+tmpv+'.hadMore();'+varname+'='+tmpv+'.nextValue())')
         self.generate(fordef.block,extras=e)
 
 
     def FunctionDefinitionStatement(self,funcdef,**kwargs):
         self.pushScope(funcdef)
-        name = funcdef.fname                   
-        
+        name = funcdef.fname
+
         if self.hasNamespace():
             nsname = self.applyNamespace(name)
             self.add(create_namespace(nsname,True))
-            txt =  nsname + " = function("            
+            txt =  nsname + " = function("
         else:
             txt = "function "+name+"("
         argc = len(funcdef.argnames)
@@ -842,7 +837,7 @@ class JavascriptBackend(object):
             if a>0:
                txt += ","
             argname=funcdef.argnames[a]
-           
+
             txt+=argname
         txt += ") "
         self.add(txt)
@@ -854,13 +849,13 @@ class JavascriptBackend(object):
                 argname = funcdef.argnames[di+offset]
                 e += ['if ('+argname+' == undefined) {']
                 e += ['   '+argname+'='+self.generate(funcdef.argdefaults[di],toplevel=True)+';']
-                e += ['}']        
+                e += ['}']
 
         if funcdef.kwarg or funcdef.vararg:
             tmpv_len = self.genTmpVarName()
             e += ['var ' + tmpv_len + '= arguments.length;']
-    
-        if funcdef.kwarg:        
+
+        if funcdef.kwarg:
             self.addJslibSupport('Kwarg')
             tmpv_lastarg = self.genTmpVarName()
             e += ['var ' + tmpv_lastarg + '= arguments[arguments.length-1];']
@@ -868,16 +863,16 @@ class JavascriptBackend(object):
             e += ['if (' + tmpv_lastarg + ' instanceof Kwarg) {']
             e += ['    ' + funcdef.kwarg + ' = ' + tmpv_lastarg + '.getDict();']
             e += ['    ' + tmpv_len + '--;']
-            e += [' } ']      
+            e += [' } ']
         if funcdef.vararg:
             tmpv = self.genTmpVarName()
             e += ['var '+funcdef.vararg + '= [];']
             e += ['for('+tmpv+'='+str(argc)+';'+tmpv+'<'+tmpv_len+';'+tmpv+'++) {']
             e += ['    ' + funcdef.vararg + '.push(arguments['+tmpv+']);']
-            e += ['}'] 
+            e += ['}']
         self.generate(funcdef.block,extras=e)
         self.popScope()
-        
+
 
     def GlobalStatement(self,gdef,**kwargs):
         self.addGlobal(gdef.varname)
@@ -895,7 +890,7 @@ class JavascriptBackend(object):
             self.generate(block)
         if ifdef.elseblock:
             self.add("else ")
-            self.generate(ifdef.elseblock)            
+            self.generate(ifdef.elseblock)
 
     def Module(self,mdef,**kwargs):
         original_scope = self.scope
@@ -911,11 +906,11 @@ class JavascriptBackend(object):
         else:
             header += "__name__ = '"+mdef.namespace+"';\n\n"
             trailer += "\n\n\n__name__ = '"+self.namespace+"';\n\n"
-        
+
         self.add(header)
 
         if mdef.name=='__main__' or (len(mdef.aliases)==1 and mdef.aliases[0][0]=='*'):
-            # "from <module> import *": inline the module completely            
+            # "from <module> import *": inline the module completely
             self.generate(mdef.code,toplevel=True)
             self.nl()
         else:
@@ -931,7 +926,7 @@ class JavascriptBackend(object):
 
         self.add(trailer)
         self.scope = original_scope
-        self.module = original_module                
+        self.module = original_module
 
     def PrintStatement(self,printdef,**kwargs):
         self.add("console.log(")
@@ -979,7 +974,7 @@ class JavascriptBackend(object):
             if len(trydef.handlers)==1 and trydef.handlers[0].ename == None:
                 catchall = True
             if not catchall:
-                self.openBlock()        
+                self.openBlock()
             for idx in xrange(0,len(trydef.handlers)):
                 self.generate(trydef.handlers[idx],handler_index=idx)
             if not catchall:
@@ -993,7 +988,7 @@ class JavascriptBackend(object):
         self.add('while(')
         self.add(self.generate(whiledef.cond,toplevel=True))
         self.add(')')
-        self.generate(whiledef.block)                
+        self.generate(whiledef.block)
 
     def Verbatim(self,vdef,**kwargs):
         textlines = vdef.text.split('\n')
@@ -1003,7 +998,7 @@ class JavascriptBackend(object):
 
     # Common
 
-    def generate(self,code,**kwargs): 
+    def generate(self,code,**kwargs):
         return getattr(self,code.__class__.__name__)(code,**kwargs)
 
     def declare(self,target):
@@ -1016,21 +1011,21 @@ class JavascriptBackend(object):
                 declares.append(varname)
         decl = DeclareStatement(declares)
         self.generate(decl)
-        self.nl()      
+        self.nl()
 
     def nl(self):
         self.add('\n')
         for i in xrange(0,self.indent):
             self.add(self.indentstr)
         return self
-        
+
     def add(self,str):
         self.code += str
         return self
 
     def __add__(self,num):
-        self.indent += num 
-        return self      
+        self.indent += num
+        return self
 
     def openBlock(self):
         self.add(" {")
@@ -1065,7 +1060,7 @@ class JavascriptBackend(object):
         # check to see if there is a target object (or class) associated with the call
         targettxt = ''
         if 'targettxt' in kwargs:
-            targettxt = kwargs['targettxt']        
+            targettxt = kwargs['targettxt']
         # create the default placeholders string eg (%1,%2,%3) if there are 3 parameters
         placeholders = ""
         for index in xrange(0,len(parameters)):
@@ -1102,7 +1097,7 @@ class JavascriptBackend(object):
         # convert the template from a string to a list ready to manipulate
         expansion = list(template)
         # work backwards through the string swapping placeholders for parameters
-        maptarget=False        
+        maptarget=False
         for (pos,index) in matches:
             if index >= 0:
                 expansion[pos:pos+2] = list(parameters[index])
@@ -1111,7 +1106,7 @@ class JavascriptBackend(object):
                 expansion[pos:pos+2] = targettxt
                 # note that we are switching from a method call to a function call
                 # with the target mapped to a parameter
-                maptarget=True                                
+                maptarget=True
         # convert back to a string and return
         txt = ''
         if targettxt != '' and not maptarget:
@@ -1121,9 +1116,22 @@ class JavascriptBackend(object):
         txt += ''.join(expansion)
         return txt
 
+    def distructure(self, varlist, mainvar):
+        t = []
+        for i, var in enumerate(varlist.elements):
+            t.append(var.varname)
+            t.append('=')
+            t.append(mainvar)
+            t.append("[")
+            t.append(str(i))
+            t.append("]")
+            t.append(';')
+        return "".join(t)
+
+
     def unpackListValue(self,target,varname,assignments):
         if isinstance(target,ListValue):
-            for idx in xrange(0,len(target.elements)):                                                
+            for idx in xrange(0,len(target.elements)):
                 self.unpackListValue(target.elements[idx],varname+"["+str(idx)+"]",assignments)
         elif isinstance(target,VarName):
             txt = ""
@@ -1140,8 +1148,8 @@ class JavascriptBackend(object):
             txt += varname
             txt += ";"
         else:
-            assert False                
-            
+            assert False
+
     def insertDependency(self,line):
         self.dependencies = [line] + self.dependencies
 
@@ -1150,7 +1158,7 @@ class JavascriptBackend(object):
             self.add(dependency)
             self.nl()
         self.dependencies = []
-   
+
     def addJslibSupport(self,package):
         self.jslib_support[package] = True
 
@@ -1177,8 +1185,8 @@ def create_namespace(module,skiplast=False):
             txt += " = {};\n"
             mdict[path] = ""
     mdict[module] = ""
-    return txt                    
-        
+    return txt
+
 # write a module
 def jswrite(code,pypath):
     global mdict
@@ -1186,6 +1194,5 @@ def jswrite(code,pypath):
     class_aliases.clear()
     jb = JavascriptBackend()
     jb.generate(code)
-    return jb.getCode() 
-        
+    return jb.getCode()
 
