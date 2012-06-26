@@ -366,8 +366,11 @@ class JavascriptBackend(object):
     # these methods do not return values but update the output program using the methods 
 
     def AssignmentStatement(self,adef,**kwargs):
-        if isinstance(adef.target,SliceOp):
+        if isinstance(adef.target, SliceOp):
             self.AssignmentSliceStatement(adef,**kwargs)
+            return
+        if isinstance(adef.target, ListValue):
+            self.MultiAssignmentStatement(adef,**kwargs)
             return
         class_variable = False
         target = adef.target
@@ -466,6 +469,28 @@ class JavascriptBackend(object):
             self.addJslibSupport(dependency)
         txt = self.expand(op,[vtxt,etxt])
         self.add(txt+";")
+    
+    def MultiAssignmentStatement(self, adef, **kargs):
+        class_variable = False
+        target = adef.target
+        if not isinstance(target,AttributeLookup):
+            self.declare(adef.target)
+        varname = self.generate(target)                        
+        exprtxt = self.generate(adef.expr,toplevel=True)
+        tmpv = self.genTmpVarName("assigment") 
+        self.add(tmpv)
+        self.add('=')
+        self.add(exprtxt)
+        self.add(';\n')
+        for i, var in enumerate(adef.target.elements):
+            
+            self.add(var.varname)
+            self.add('=')
+            self.add(tmpv)
+            self.add("[")
+            self.add(str(i))
+            self.add("]")
+            self.add(';\n')
 
     def Block(self,block,**kwargs):
         if not 'toplevel' in kwargs:

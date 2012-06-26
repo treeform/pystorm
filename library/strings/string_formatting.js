@@ -1,5 +1,5 @@
 
-function py2js_next_token(str,start,match,incl,limit) {
+function __next_token(str,start,match,incl,limit) {
     var pos = 0;
     var token = '';
     while(true) {
@@ -27,7 +27,7 @@ function py2js_next_token(str,start,match,incl,limit) {
 }
         
                             
-function py2js_parse_format(format,start) {
+function __parse_format(format,start) {
     var pos = start+1; // skip the %
 
     // initialize the return object
@@ -48,7 +48,7 @@ function py2js_parse_format(format,start) {
     
     // parse key (optional)   
     if (ch == '(') {
-        [key,pos] = py2js_next_token(format,pos+1,")",false,-1);
+        [key,pos] = __next_token(format,pos+1,")",false,-1);
         if (key == null) { return null; } 
         fmt.key = key;
         pos++; // skip the closing (
@@ -56,7 +56,7 @@ function py2js_parse_format(format,start) {
 
     // flags
     var flags = '';
-    [flags,pos] = py2js_next_token(format,pos,'+- 0#',true,-1);
+    [flags,pos] = __next_token(format,pos,'+- 0#',true,-1);
     if (flags == null) { return null; }
     if (flags.indexOf('+') != -1) { fmt.useplus = true; }
     if (flags.indexOf('-') != -1) { fmt.ljust = true; }
@@ -68,7 +68,7 @@ function py2js_parse_format(format,start) {
     }
 
     // width
-    [wstr,pos] = py2js_next_token(format,pos,'0123456789*',true,-1);
+    [wstr,pos] = __next_token(format,pos,'0123456789*',true,-1);
     if (wstr == null) { return null; }
     if (wstr != '') { fmt.width = (wstr=='*') ? '*' : Number(wstr); }
 
@@ -76,7 +76,7 @@ function py2js_parse_format(format,start) {
     if (pos >= format.length) { return null; }
     ch = format[pos];
     if (ch == '.') { 
-        [pstr,pos] = py2js_next_token(format,pos+1,'0123456789*',true,-1);
+        [pstr,pos] = __next_token(format,pos+1,'0123456789*',true,-1);
         if (pstr == null) { return null; }
         if (pstr != '') { fmt.precision = (pstr=='*') ? '*' : Number(pstr); }
         if (pos >= format.length) { return null; }
@@ -84,7 +84,7 @@ function py2js_parse_format(format,start) {
     }
 
     // length modifier (ignore this)
-    [lstr,pos] = py2js_next_token(format,pos,"lh",true,-1);
+    [lstr,pos] = __next_token(format,pos,"lh",true,-1);
     if (lstr == null) { return null; }
     if (pos >= format.length) { return null; }
     ch = format[pos];    
@@ -96,7 +96,7 @@ function py2js_parse_format(format,start) {
     return fmt;
 }
 
-function py2js_apply_format(fmt,values,counter) {
+function __apply_format(fmt,values,counter) {
     var width = -1;
     var precision = 6;
 
@@ -244,7 +244,7 @@ function py2js_apply_format(fmt,values,counter) {
     return [result,counter];
 }    
 
-function py2js_mod_format(a1,a2) {
+function __mod_format(a1,a2) {
     if (typeof(a1) == 'number') {
         return (a1 % a2);
     }    
@@ -272,10 +272,10 @@ function py2js_mod_format(a1,a2) {
                 i += 2;
             }
             else {
-                var fmt = py2js_parse_format(a1,i);
+                var fmt = __parse_format(a1,i);
                 i = fmt.pos;
                 // print("nb="+String(fmt.nbytes));
-                [s,conv_counter] = py2js_apply_format(fmt,a2,conv_counter);               
+                [s,conv_counter] = __apply_format(fmt,a2,conv_counter);               
                 result += s;
             }
         } else {

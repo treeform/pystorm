@@ -145,6 +145,8 @@ harness.write("tests_start();\n");
 for testdir in testdirs:
     for f in os.listdir(testdir):
         if f.endswith(".py"):
+            if len(sys.argv) > 1 and sys.argv[1] not in testdir + "/" + f:
+                continue
             f = f[:-3]        
             g = GenerateTester()
             g.configure(os.path.join(testdir,f))

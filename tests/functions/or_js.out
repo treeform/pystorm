@@ -1,0 +1,8 @@
+F OR F=F
+F OR T=T
+T OR F=T
+T OR T=T
+T OR ?=T
+F OR ?=?
+? OR T=T
+? OR F=F
