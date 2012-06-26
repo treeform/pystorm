@@ -154,7 +154,7 @@ class MersenneTwister:
     # slight change for C++, 2004/2/26
     def init_by_array(self, init_key, key_length=-1):
         if key_length < 0:
-		key_length = len(init_key)
+        key_length = len(init_key)
         self.init_genrand(19650218L)
         i,j = 1,0
         k = max(N, key_length)
