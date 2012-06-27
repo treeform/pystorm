@@ -3,7 +3,7 @@
 # usage:
 #
 #   python pystorm.py example.py > example.js
-#       
+#
 #   python pystorm.py example.py -debug > example.js
 #       (convert and embed a comment in the output with the parsetree, for debugging purposes)
 
@@ -22,7 +22,7 @@ code = None
 try:
     code = pyread(argfile)
 except FrontendException, ex:
-    print "py2js Frontend Error:" + str(ex)
+    print "Frontend Error: " + str(ex)
 
 if debug:
     print "/* " + str(code) + " */"
@@ -31,5 +31,5 @@ if code:
     try:
         print jswrite(code,argfile)
     except BackendException, ex:
-        print "py2js Backend Error:" + str(ex)
+        print "Backend Error: " + str(ex)
 

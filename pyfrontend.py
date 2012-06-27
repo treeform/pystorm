@@ -100,7 +100,7 @@ class GenVisitor(object):
 
     def addGlobal(self,name):
         self.getInnerScope().addGlobal(name)
-   
+
 # expressions
 
     def Attribute(self,ast):
@@ -142,7 +142,7 @@ class GenVisitor(object):
         if ast.func.__class__.__name__ == 'Attribute':
             target = self.visit(ast.func.value)
             return MethodCall(target,ast.func.attr,args,kwargs)
-        fname = ast.func.id        
+        fname = ast.func.id
         return FunctionCall(fname,args,kwargs)
 
     def Compare(self,ast):
@@ -156,31 +156,31 @@ class GenVisitor(object):
                 result = clause
             else:
                 result = BinaryOp("and",result,clause)
-            lhs = rhs    
+            lhs = rhs
         return result
-        
+
     def comprehension(self, ast):
         t = self.visit(ast.target)
         i = self.visit(ast.iter)
-        cond = None   
+        cond = None
         for e in ast.ifs:
-            target = self.visit(e.left)   
-            # print str(e.__dict__) 
+            target = self.visit(e.left)
+            # print str(e.__dict__)
             for index in xrange(0,len(e.ops)):
                 c = self.visit(e.comparators[index])
                 op = e.ops[index].__class__.__name__
                 if op in self.bops:
                     op = self.bops[op]
                 else:
-                    raise FrontendNotHandledException('Binary Operaton:'+op,ast.lineno)                               
+                    raise FrontendNotHandledException('Binary Operaton:'+op,ast.lineno)
                 bop = BinaryOp(op,target,c)
                 if cond:
                     cond = BinaryOp('and',cond,bop)
                 else:
-                    cond = bop    
+                    cond = bop
         return ListComprehensionGenerator(t,i,cond)
 
-    def Dict(self, ast):       
+    def Dict(self, ast):
         keyvals = []
         for idx in xrange(0,len(ast.keys)):
             key = ast.keys[idx]
@@ -227,7 +227,7 @@ class GenVisitor(object):
             return Literal(False)
         elif ast.id == 'None':
             return Literal(None)
-        return VarName(ast.id)  
+        return VarName(ast.id)
 
     def Num(self,ast):
         return Literal(ast.n)
@@ -250,7 +250,7 @@ class GenVisitor(object):
 
     def Tuple(self,ast):
         return self.List(ast)
-      
+
     def UnaryOp(self,ast):
         op = self.uops[ast.op.__class__.__name__]
         arg = self.visit(ast.operand)
@@ -304,7 +304,7 @@ class GenVisitor(object):
                         memberfns.append(b)
                 elif isinstance(b,ClassDefinitionStatement):
                     b.setParentClass(cdef)
-                    subclasses.append(b)                
+                    subclasses.append(b)
                 elif isinstance(b,AssignmentStatement):
                     staticvars.append((b.target,b.expr))
                 elif isinstance(b,EmptyStatement):
@@ -313,8 +313,8 @@ class GenVisitor(object):
                     pass # perhaps a docstring?  FIXME - need to check
                 else:
                     raise FrontendNotHandledException("class contents except for member variables, classes and functions",ast.lineno)
-        cdef.configure(bases,constructor,memberfns,staticvars,subclasses)       
-        self.module.addClassMountPoint(name,cdef.getClassNamespace())        
+        cdef.configure(bases,constructor,memberfns,staticvars,subclasses)
+        self.module.addClassMountPoint(name,cdef.getClassNamespace())
         self.popScope()
         return [cdef]+subclasses
 
@@ -339,7 +339,7 @@ class GenVisitor(object):
         edef = ExceptionHandlerStatement(etype,ename,body)
         return edef
 
-    def For(self, ast):        
+    def For(self, ast):
         target = self.visit(ast.target)
         loopexpr = self.visit(ast.iter)
         body = self.Statements(ast.body)
@@ -352,8 +352,8 @@ class GenVisitor(object):
                 else:
                     step = Literal(1)
                 fdef = ForStatement(target,lwb,upb,step,body)
-                return [fdef]            
-        
+                return [fdef]
+
         fdef = ForInStatement(target,loopexpr,body)
         return [fdef]
 
@@ -367,10 +367,10 @@ class GenVisitor(object):
 
         for d in ast.args.defaults:
             argdefaults.append(self.visit(d))
-                              
+
         for a in ast.args.args:
             argnames.append(a.id)
-            
+
         vararg = None
         kwarg = None
         if ast.args.vararg:
@@ -381,7 +381,7 @@ class GenVisitor(object):
         self.pushScope(fdef)
         body = self.Statements(ast.body)
         fdef.configure(decorators,argnames,argdefaults,vararg,kwarg,body)
-        
+
         self.popScope()
         return [fdef]
 
@@ -406,9 +406,9 @@ class GenVisitor(object):
     def Import(self,ast):
         modules = []
         for name in ast.names:
-            
+
             (modpath,namespace) = self.locateModule(name.name,name.asname)
-            code = None         
+            code = None
 
             mname = name.name
             if name.asname and name.asname !=  "":
@@ -418,9 +418,9 @@ class GenVisitor(object):
             global loaded_modules
             if namespace not in loaded_modules:
                 try:
-                    code = pyread(modpath,(name.name,modpath,namespace,[]))  
+                    code = pyread(modpath,(name.name,modpath,namespace,[]))
                 except Exception, ex:
-                    raise ex                             
+                    raise ex
                 modules.append(code)
                 loaded_modules.add(namespace)
 
@@ -432,22 +432,22 @@ class GenVisitor(object):
 
         importall = False
         if len(ast.names)==1 and ast.names[0].name=='*':
-            importall = True        
+            importall = True
         namespace = self.module_namespace
 
         (modpath,namespace) = self.locateModule(ast.module,'')
 
-        if importall == False:   
+        if importall == False:
             for name in ast.names:
                 aliasedname = name.name
-                if name.asname and name.asname != "":                
-                    aliasedname = name.asname                
-                
+                if name.asname and name.asname != "":
+                    aliasedname = name.asname
+
                 unaliasedname = namespace + "." + name.name
                 self.module.aliases.append((aliasedname,unaliasedname))
         else:
             namespace = self.module_namespace
-              
+
         modules = []
         global loaded_modules
         if namespace not in loaded_modules:
@@ -464,8 +464,8 @@ class GenVisitor(object):
                             jscode = jsfile.read()
                             return [Verbatim(jscode)]
                 raise ex
-            modules.append(code)     
-            loaded_modules.add(namespace)                   
+            modules.append(code)
+            loaded_modules.add(namespace)
         return modules
 
     def locateModule(self,module,asname):
@@ -475,7 +475,7 @@ class GenVisitor(object):
         (sourcedir,sourcefile) = split(self.module_path)
         modpath = join(sourcedir,modpath)
         namespace = ''
-        
+
         # first see if the module is located relative to the calling module, but only
         # if the calling module is the initial module (or in the same directory)
         if sourcedir != initial_module_dir:
@@ -501,7 +501,7 @@ class GenVisitor(object):
         modpath += ".py"
         modpath = join(initial_module_dir,modpath)
         if asname and asname != "":
-            namespace = asname            
+            namespace = asname
         else:
             namespace = module
         return (modpath,namespace)
@@ -535,7 +535,7 @@ class GenVisitor(object):
         if r.inst:
             robj = self.visit(r.inst)
         rdef = RaiseStatement(rtype,robj)
-        return [rdef]        
+        return [rdef]
 
     def Return(self,ast):
         rvalue = self.visit(ast.value)
@@ -569,11 +569,11 @@ class GenVisitor(object):
                                     continue
                                 if val.startswith('pystorm-skip-end'):
                                     skip = False
-                                    continue                
+                                    continue
                     if not skip:
-                        statements.append(stmt)            
+                        statements.append(stmt)
         block = Block(statements)
-        
+
         return block
 
     def TryFinally(self, ast):
@@ -598,7 +598,11 @@ class GenVisitor(object):
 
         tdef = TryStatement(block,handlers,None)
         return [tdef]
- 
+
+    def ExceptHandler(self, ast):
+        body = self.Statements(ast.body)
+        return body
+
     def While(self, ast):
         cond = self.visit(ast.test)
         body = self.Statements(ast.body)
@@ -624,5 +628,4 @@ def pyread(path,module=None):
     contents = file.read()
     gv = GenVisitor(module[0],module[1],module[2])
     return gv.parse(contents)
-
 
