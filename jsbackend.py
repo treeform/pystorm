@@ -962,26 +962,47 @@ class JavascriptBackend(object):
         self.add("try")
         self.generate(trydef.body)
         if len(trydef.handlers)>0:
-            self.add("catch")
-            catchvar = None
 
-            if len(trydef.handlers)==1:
-                if hasattr(trydef.handlers[0], "ename"):
-                    catchvar = trydef.handlers[0].ename
-            if catchvar == None:
-                catchvar = self.genTmpVarName("ex")
-            self.pushCatchVar(catchvar)
+            catchvar = self.genTmpVarName("ex")
+            self.add("catch")
             self.add("("+catchvar+")")
-            catchall = False
-            if len(trydef.handlers)==1 and hasattr(trydef.handlers[0], "ename") and trydef.handlers[0].ename == None:
-                catchall = True
-            if not catchall:
-                self.openBlock()
-            for idx in xrange(0,len(trydef.handlers)):
-                self.generate(trydef.handlers[idx], handler_index=idx)
-            if not catchall:
-                self.closeBlock()
-            self.popCatchVar()
+            self.add("{")
+            self += 1
+            self.nl()
+
+            for idx, handler in enumerate(trydef.handlers):
+                self += 1
+                self.nl()
+
+                if handler.name:
+                    print handler.name.id
+                    print handler.type.id
+                    self.add(handler.name.id+"="+catchvar+";")
+                    self.nl()
+                    self.add("if("+handler.name.id+" instanceof "+handler.type.id+")")
+                else:
+                    self.add("if(true)")
+
+                #if handler.name:
+                #    catchvar = handler.name.id
+                #if catchvar == None:
+                #    catchvar = self.genTmpVarName("ex")
+
+                self.pushCatchVar(catchvar)
+                catchall = False
+                if len(trydef.handlers)==1 and trydef.handlers[0].name == None:
+                    catchall = True
+                #if not catchall:
+                #    self.openBlock()
+                self.generate(handler.body, handler_index=idx)
+                #if not catchall:
+                #    self.closeBlock()
+                self.popCatchVar()
+                self -= 1
+                self.nl()
+            self -= 1
+            self.nl()
+            self.add("}")
         if trydef.final:
             self.add("finally")
             self.generate(trydef.final)

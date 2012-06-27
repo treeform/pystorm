@@ -23,12 +23,13 @@ function __next_token(str,start,match,incl,limit) {
         }
         pos++;
     }
-    return null; 
+    return null;
 }
-        
-                            
+
+
 function __parse_format(format,start) {
     var pos = start+1; // skip the %
+    var wstr = null;
 
     // initialize the return object
     var fmt = new Object();
@@ -43,24 +44,29 @@ function __parse_format(format,start) {
 
     fmt.width = null;
     fmt.precision = null;
-    
+
     var ch = format[pos];
-    
-    // parse key (optional)   
+
+    // parse key (optional)
     if (ch == '(') {
-        [key,pos] = __next_token(format,pos+1,")",false,-1);
-        if (key == null) { return null; } 
+        var tmp = __next_token(format,pos+1,")",false,-1);
+        key = tmp[0];
+        pos = tmp[1];
+        if (key == null) { return null; }
         fmt.key = key;
         pos++; // skip the closing (
     }
 
     // flags
     var flags = '';
-    [flags,pos] = __next_token(format,pos,'+- 0#',true,-1);
+    var tmp = __next_token(format,pos,'+- 0#',true,-1);
+    flags = tmp[0];
+    pos = tmp[1];
+
     if (flags == null) { return null; }
     if (flags.indexOf('+') != -1) { fmt.useplus = true; }
     if (flags.indexOf('-') != -1) { fmt.ljust = true; }
-    if (flags.indexOf(' ') != -1) { fmt.space_pad = true; }       
+    if (flags.indexOf(' ') != -1) { fmt.space_pad = true; }
     if (flags.indexOf('0') != -1) { fmt.zero_pad = true; }
     if (flags.indexOf('#') != -1) { fmt.alternate = true; }
     if (flags.useplus) {
@@ -68,30 +74,37 @@ function __parse_format(format,start) {
     }
 
     // width
-    [wstr,pos] = __next_token(format,pos,'0123456789*',true,-1);
+    var tmp = __next_token(format,pos,'0123456789*',true,-1);
+    lstr = tmp[0];
+    pos = tmp[1];
+
     if (wstr == null) { return null; }
     if (wstr != '') { fmt.width = (wstr=='*') ? '*' : Number(wstr); }
 
     // precision
     if (pos >= format.length) { return null; }
     ch = format[pos];
-    if (ch == '.') { 
-        [pstr,pos] = __next_token(format,pos+1,'0123456789*',true,-1);
+    if (ch == '.') {
+        var tmp = __next_token(format,pos+1,'0123456789*',true,-1);
+        pstr = tmp[0];
+        pos = tmp[1];
         if (pstr == null) { return null; }
         if (pstr != '') { fmt.precision = (pstr=='*') ? '*' : Number(pstr); }
         if (pos >= format.length) { return null; }
-        ch = format[pos];        
+        ch = format[pos];
     }
 
     // length modifier (ignore this)
-    [lstr,pos] = __next_token(format,pos,"lh",true,-1);
+    var tmp = __next_token(format,pos,"lh",true,-1);
+    lstr = tmp[0];
+    pos = tmp[1];
     if (lstr == null) { return null; }
     if (pos >= format.length) { return null; }
-    ch = format[pos];    
+    ch = format[pos];
 
     // code
     if ("srcdiuoxXeEfFgG".indexOf(ch) == -1) { return null; }
-    fmt.code = ch; 
+    fmt.code = ch;
     fmt.pos = pos;
     return fmt;
 }
@@ -114,7 +127,7 @@ function __apply_format(fmt,values,counter) {
         val = values[fmt.key];
     } else {
         val = values[counter++];
-    } 
+    }
 
     var result = null;
     var absval = null;
@@ -124,15 +137,15 @@ function __apply_format(fmt,values,counter) {
             numeric = false;
             if (val.__repr__) {
                 result = val.__repr__();
-                break;            
+                break;
             }
-        case 's': 
+        case 's':
         case 'c':
             numeric = false;
-            result = String(val); 
+            result = String(val);
             break;
         case 'i':
-        case 'u': 
+        case 'u':
         case 'd':
             absval = Math.abs(val);
             result = String(Math.floor(absval));
@@ -160,7 +173,7 @@ function __apply_format(fmt,values,counter) {
         case 'G':
             absval = Math.abs(val);
             var decimal_range = ((absval == 0) || (absval >= 0.0001 && absval < 1000000));
-            if (!((fmt.code == 'g') || (fmt.code == 'G')) || decimal_range) { 
+            if (!((fmt.code == 'g') || (fmt.code == 'G')) || decimal_range) {
                 if (fmt.code == 'g' || fmt.code == 'G') {
                     var integerval = Math.floor(absval);
                     var integerstr = integerval.toString();
@@ -192,19 +205,19 @@ function __apply_format(fmt,values,counter) {
                     result = result.slice(0,plus+2)+"0"+s;
                 }
             }
-            break;            
-        default: 
+            break;
+        default:
             result = "?";
     }
-    
+
     var signchar = null;
     if (numeric) {
         if (val < 0) {
             signchar = '-';
-        } else if (fmt.useplus) { 
+        } else if (fmt.useplus) {
             signchar = '+';
-        } else if (fmt.space_pad) { 
-            signchar = " "; 
+        } else if (fmt.space_pad) {
+            signchar = " ";
         }
     }
 
@@ -219,7 +232,7 @@ function __apply_format(fmt,values,counter) {
 
     if ((fmt.ljust || !fmt.zero_pad) && signchar) {
         result = signchar + result;
-        signchar = null;    
+        signchar = null;
     }
 
     if (width != -1) {
@@ -242,20 +255,20 @@ function __apply_format(fmt,values,counter) {
     }
 
     return [result,counter];
-}    
+}
 
 function __mod_format(a1,a2) {
     if (typeof(a1) == 'number') {
         return (a1 % a2);
-    }    
+    }
     var mapping_format = false;
     var tystr = typeof(a2);
     if (tystr == 'string' || tystr == 'number' ) {
-        a2 = [a2];       
+        a2 = [a2];
     } else {
         if (!(a2 instanceof Array)) {
             mapping_format = true;
-        } 
+        }
     }
     var result = '';
     var index = 0;
@@ -266,17 +279,21 @@ function __mod_format(a1,a2) {
             if (i+1 == a1.length) {
                 result += '%';
                 i += 1;
-            } 
+            }
             else if (a1[i+1] == '%') {
                 result += '%';
                 i += 2;
             }
             else {
                 var fmt = __parse_format(a1,i);
-                i = fmt.pos;
-                // print("nb="+String(fmt.nbytes));
-                [s,conv_counter] = __apply_format(fmt,a2,conv_counter);               
-                result += s;
+                if (fmt) {
+                    i = fmt.pos;
+                    // print("nb="+String(fmt.nbytes));
+                    var tmp = __apply_format(fmt,a2,conv_counter);
+                    s = tmp[0];
+                    conv_counter = tmp[1];
+                    result += s;
+                }
             }
         } else {
             result += a1[i];
@@ -285,3 +302,4 @@ function __mod_format(a1,a2) {
     }
     return result;
 }
+

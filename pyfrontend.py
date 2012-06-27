@@ -600,8 +600,8 @@ class GenVisitor(object):
         return [tdef]
 
     def ExceptHandler(self, ast):
-        body = self.Statements(ast.body)
-        return body
+        ast.body = self.Statements(ast.body)
+        return ast
 
     def While(self, ast):
         cond = self.visit(ast.test)
