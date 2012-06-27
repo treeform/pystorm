@@ -6,6 +6,7 @@ to a simplified structure using the classes in parsetree.py
 from parsetree import *
 
 import _ast
+import os
 from os.path import split, splitext, join
 import codecs
 import sys
@@ -322,8 +323,14 @@ class GenVisitor(object):
         body = self.Statements(ast.body)
         if isinstance(loopexpr,FunctionCall):
             if loopexpr.fname == "xrange" or loopexpr.fname == 'range':
-                lwb = loopexpr.args[0]
-                upb = loopexpr.args[1]
+                print loopexpr.fname, loopexpr.args
+                if len(loopexpr.args)==1:
+                    lwb = Literal(0)
+                    upb = loopexpr.args[0]
+                elif len(loopexpr.args)==2:
+                    lwb = loopexpr.args[0]
+                    upb = loopexpr.args[1]
+                
                 if len(loopexpr.args)==3:
                     step = loopexpr.args[2]
                 else:
@@ -394,10 +401,10 @@ class GenVisitor(object):
 
             global loaded_modules
             if namespace not in loaded_modules:
-                try:
-                    code = pyread(modpath,(name.name,modpath,namespace,[]))
-                except Exception, ex:
-                    raise ex
+                #try:
+                code = pyread(modpath,(name.name,modpath,namespace,[]))
+                #except Exception, ex:
+                #    raise ex
                 modules.append(code)
                 loaded_modules.add(namespace)
 
@@ -440,6 +447,9 @@ class GenVisitor(object):
                             jsfile = open(jspath,"r")
                             jscode = jsfile.read()
                             return [Verbatim(jscode)]
+                # if its on the import path
+                for path in sys.path:
+                    print sys.path
                 raise ex
             modules.append(code)
             loaded_modules.add(namespace)
@@ -471,16 +481,24 @@ class GenVisitor(object):
             except:
                 pass
 
-        # assume that the module is relative to the top level module
-        # FIXME also search the current PYTHONPATH
-        modpath = module
-        modpath = modpath.replace(".","/")
-        modpath += ".py"
-        modpath = join(initial_module_dir,modpath)
         if asname and asname != "":
             namespace = asname
         else:
             namespace = module
+            
+        # also search the current PYTHONPATH
+        for path in sys.path:
+            modpath = path+"/"+module+".py"
+            if os.path.exists(modpath):
+                print (modpath, namespace)
+                return (modpath, namespace)
+
+        # assume that the module is relative to the top level module
+        modpath = module
+        modpath = modpath.replace(".","/")
+        modpath += ".py"
+        modpath = join(initial_module_dir,modpath)
+        
         return (modpath,namespace)
 
     def Module(self,ast):
